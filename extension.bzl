@@ -15,6 +15,7 @@
 """A bzlmod extension for loading the NDK."""
 
 load(":rules.bzl", "android_ndk_repository")
+load(":ndk_versions.bzl", "NDK_VERSIONS")
 
 def _android_ndk_repository_extension_impl(module_ctx):
     root_modules = [m for m in module_ctx.modules if m.is_root and m.tags.configure]
@@ -29,7 +30,7 @@ def _android_ndk_repository_extension_impl(module_ctx):
     kwargs = {}
     if module.tags.configure:
         kwargs["api_level"] = module.tags.configure[0].api_level
-        kwargs["path"] = module.tags.configure[0].path
+        kwargs["version"] = module.tags.configure[0].version
 
     android_ndk_repository(
         name = "androidndk",
@@ -40,7 +41,11 @@ android_ndk_repository_extension = module_extension(
     implementation = _android_ndk_repository_extension_impl,
     tag_classes = {
         "configure": tag_class(attrs = {
-            "path": attr.string(),
+            "version": attr.string(
+                mandatory = True,
+                doc = "The version of the Android NDK to download.",
+                values = ["latest"] + NDK_VERSIONS.keys(),
+            ),
             "api_level": attr.int(),
         }),
     },

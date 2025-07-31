@@ -4,3 +4,4 @@ bazel-*
 MODULE.bazel.lock
 
 *.swp
+Session.vim
