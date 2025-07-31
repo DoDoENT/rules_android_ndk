@@ -14,6 +14,8 @@
 
 """A repository rule for integrating the Android NDK."""
 
+load(":ndk_versions.bzl", "NDK_VERSIONS")
+
 DEFAULT_API_LEVEL = 31
 
 _EXEC_CONSTRAINTS = {
@@ -58,6 +60,7 @@ def _android_ndk_repository_common(ctx, ndk_path):
     Returns:
         A final dict of configuration attributes and values.
     """
+
     is_windows = False
     executable_extension = ""
     exec_compatible_with = None
@@ -80,7 +83,8 @@ def _android_ndk_repository_common(ctx, ndk_path):
 
     sysroot_directory = "%s/sysroot" % clang_directory
 
-    _create_symlinks(ctx, ndk_path, clang_directory, sysroot_directory)
+    # TODO(#32): Remove this hack
+    ctx.symlink("sources", "ndk/sources")
 
     api_level = ctx.attr.api_level or DEFAULT_API_LEVEL
 
@@ -129,29 +133,6 @@ def _android_ndk_repository_common(ctx, ndk_path):
         },
         executable = False,
     )
-
-# Manually create a partial symlink tree of the NDK to avoid creating BUILD
-# files in the real NDK directory.
-def _create_symlinks(ctx, ndk_path, clang_directory, sysroot_directory):
-    # Path needs to end in "/" for replace() below to work
-    if not ndk_path.endswith("/"):
-        ndk_path = ndk_path + "/"
-
-    for p in ctx.path(ndk_path + clang_directory).readdir():
-        repo_relative_path = str(p).replace(ndk_path, "")
-
-        # Skip sysroot directory, since it gets its own BUILD file
-        if repo_relative_path != sysroot_directory:
-            ctx.symlink(p, repo_relative_path)
-
-    for p in ctx.path(ndk_path + sysroot_directory).readdir():
-        repo_relative_path = str(p).replace(ndk_path, "")
-        ctx.symlink(p, repo_relative_path)
-
-    ctx.symlink(ndk_path + "sources", "sources")
-
-    # TODO(#32): Remove this hack
-    ctx.symlink(ndk_path + "sources", "ndk/sources")
 
 _COMMON_ATTR = {
     "api_level": attr.int(
@@ -206,13 +187,35 @@ exec_configuration_android_ndk_repository = repository_rule(
 )
 
 def _android_ndk_repository_impl(ctx):
-    ndk_path = ctx.attr.path or ctx.getenv("ANDROID_NDK_HOME", None)
-    if not ndk_path:
-        fail("Either the ANDROID_NDK_HOME environment variable or the " +
-             "path attribute of android_ndk_repository must be set.")
+    version = ctx.attr.version
 
-    if ndk_path.startswith("$WORKSPACE_ROOT"):
-        ndk_path = str(ctx.workspace_root) + ndk_path.removeprefix("$WORKSPACE_ROOT")
+    if version == None:
+        version = "latest"
+
+    if version == "latest":
+        version = NDK_VERSIONS[NDK_VERSIONS.keys()[0]]
+    ndk_url = "https://dl.google.com/android/repository/android-ndk-{}-{}.zip"
+
+    if ctx.os.name == "linux":
+        osname = "linux"
+        sha256 = NDK_VERSIONS[version].sha256_linux
+    elif ctx.os.name == "mac os x":
+        # Note: darwin-x86_64 does indeed contain fat binaries with arm64 slices, too.
+        osname = "darwin"
+        sha256 = NDK_VERSIONS[version].sha256_darwin
+    elif ctx.os.name.startswith("windows"):
+        osname = "windows"
+        sha256 = NDK_VERSIONS[version].sha256_windows
+    else:
+        fail("Unsupported operating system: " + ctx.os.name)
+
+    ctx.report_progress("Downloading Android NDK version {}".format(version))
+    ctx.download_and_extract(
+        url = ndk_url.format(version, osname),
+        sha256 =sha256,
+        strip_prefix = "android-ndk-{}".format(version),
+    )
+    ndk_path = ""
 
     return _android_ndk_repository_common(ctx, ndk_path)
 
@@ -220,10 +223,11 @@ android_ndk_repository = repository_rule(
     doc = "A repository rule that integrates the Android NDK from a local path. Uses ANDROID_NDK_HOME environment variable or the path attribute. This is the rule used by the bzlmod extension.",
     implementation = _android_ndk_repository_impl,
     attrs = _COMMON_ATTR | {
-        "path": attr.string(
-            doc = "The path to the local Android NDK installation. If not set, ANDROID_NDK_HOME environment variable is used. May start with $WORKSPACE_ROOT to reference the workspace root.",
+        "version": attr.string(
+            mandatory = True,
+            doc = "The version of the Android NDK to download. Defaults to 'latest'.",
+            values = ["latest"] + NDK_VERSIONS.keys(),
         ),
     },
-    environ = ["ANDROID_NDK_HOME"],
-    local = True,
+    local = False,
 )
