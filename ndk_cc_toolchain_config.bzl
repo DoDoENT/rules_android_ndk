@@ -437,7 +437,7 @@ def ndk_cc_toolchain_config(
                         action.cpp_link_executable,
                     ],
                     flag_groups = [
-                        flag_group(flags = ["-flto=thin"]),
+                        flag_group(flags = ["-flto=thin", "-fwhole-program-vtables"]),
                         flag_group(
                             expand_if_available = "lto_indexing_bitcode_file",
                             flags = [
