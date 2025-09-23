@@ -356,7 +356,7 @@ def ndk_cc_toolchain_config(
         ),
         feature(
             name = "crosstool_has_neon",
-            enabled = api_level >= 23,
+            enabled = api_level >= 21,
         ),
         feature(
             name = "crosstool_needs_stackrealign",
@@ -758,7 +758,7 @@ def ndk_cc_toolchain_config(
                 ),
                 flag_set(
                     actions = actions.all_compile,
-                    flags = ["-mfpu=neon"],
+                    flags = ["-mfpu=neon-vfpv4"],
                     features = ["crosstool_cpu_arm", "crosstool_has_neon"],
                 ),
                 flag_set(
