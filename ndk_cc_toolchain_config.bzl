@@ -1080,10 +1080,9 @@ def ndk_cc_toolchain_config(
                     actions = actions.all_compile,
                     flags = [
                         "-fsanitize=undefined",
-                        # Due to lack of runtimes in NDK, only operate in TRAP mode.
-                        "-fsanitize-trap=undefined",
-                        # NDK doesn't support this yet https://github.com/android-ndk/ndk/issues/184
-                        "-fno-sanitize=signed-integer-overflow",
+
+                        # NDK issue: https://github.com/android/ndk/issues/2065
+                        "-fno-sanitize=vptr",
                     ],
                     features = ["ubsan"],
                 ),
@@ -1091,8 +1090,6 @@ def ndk_cc_toolchain_config(
                     actions = actions.all_link,
                     flags = [
                         "-fsanitize=undefined",
-                        # Due to lack of runtimes in NDK, only operate in TRAP mode.
-                        "-fsanitize-trap=undefined",
                     ],
                     features = ["ubsan"],
                 ),
