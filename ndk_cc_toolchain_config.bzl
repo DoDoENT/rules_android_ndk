@@ -652,7 +652,6 @@ def ndk_cc_toolchain_config(
                         "-std=gnu++17",
                         "-Wc++2a-extensions",
                         "-Woverloaded-virtual",
-                        "-Wnon-virtual-dtor",
                         "-Wno-deprecated",
                         "-fshow-overloads=best",
                         "-Wdeprecated-increment-bool",
@@ -865,7 +864,6 @@ def ndk_cc_toolchain_config(
                     flags = [
                         "-Wno-deprecated",
                         "-Wdeprecated-increment-bool",
-                        "-Wnon-virtual-dtor",
                         "-Woverloaded-virtual",
                     ],
                 ),
