@@ -763,12 +763,7 @@ def ndk_cc_toolchain_config(
                 flag_set(
                     actions = actions.all_compile,
                     flags = ["-mthumb"],
-                    features = ["crosstool_cpu_arm", "opt"],
-                ),
-                flag_set(
-                    actions = actions.all_compile,
-                    flags = ["-marm"],
-                    features = ["crosstool_cpu_arm", "dbg"],
+                    features = ["crosstool_cpu_arm"],
                 ),
                 flag_set(
                     actions = actions.all_link,
