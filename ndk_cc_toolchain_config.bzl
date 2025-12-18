@@ -1001,7 +1001,7 @@ def ndk_cc_toolchain_config(
                 ),
                 flag_set(
                     actions = actions.all_link,
-                    flags = ["-Wl,--icf=safe"],
+                    flags = ["-Wl,--icf=all"],
                     features = ["opt"],
                 ),
 
@@ -1360,7 +1360,7 @@ def ndk_cc_toolchain_config(
                 # Hardcoded library link flags.
                 flag_set(
                     actions = actions.all_full_link,
-                    flags = ["-Wl,--no-undefined"],
+                    flags = ["-Wl,--no-undefined", "-Wl,-z,relro", "-Wl,-z,now"],
                     features = ["no_undefined"],
                 ),
                 flag_set(
